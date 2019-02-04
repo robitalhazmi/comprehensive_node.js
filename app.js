@@ -17,7 +17,7 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 // Create routes
 app.use('/items', itemRouter);
-// Parses dta to json
+// Parses data to json
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -32,7 +32,7 @@ app.get('/', function(req, res){
 
 // Connect wtich Mongo database
 mongoose.Promise = require('bluebird');
-mongoose.connect('mongodb://<admin>:<password>admin@127.0.0.1:27017/aufinancex')
+mongoose.connect('mongodb://admin:admin@127.0.0.1:27017/aufinancex?authSource=admin', {useNewUrlParser: true})
     .then(() => { // if all is ok we will be here
         console.log('Connected');
     })
