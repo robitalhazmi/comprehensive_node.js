@@ -17,15 +17,15 @@ itemRouter.route('/add').get(function (req, res) {
 });
 // Post route
 itemRouter.route('/add/post').post(function (req, res) {
-    var item = new item(req.body);
-    item.save()
-    .then(item => {
-        res.redirect('/');
-    })
-    .catch(err => {
-        res.status(400).send("unable to save to database")
-    });
-});
+    var item = new Item(req.body);
+        item.save()
+      .then(item => {
+      res.redirect('/items');
+      })
+      .catch(err => {
+      res.status(400).send("unable to save to database");
+      });
+  });
 
 // Export itemRouter module
 module.exports = itemRouter;

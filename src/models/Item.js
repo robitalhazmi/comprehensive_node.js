@@ -1,15 +1,15 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-// Define Schema
+
+// Define collection and schema for Items
 var Item = new Schema({
-    // Define item object
-    item: {
-        type: String
-    }
-},
-{
-    // Define collection name
-    collection: 'items'
+  item: {
+    type: String
+  },
+
+},{
+	collection: 'items'
 });
+
 // Export Item model
 module.exports = mongoose.model('Item', Item);
