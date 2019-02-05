@@ -7,7 +7,14 @@ var Item = require('../models/Item');
 
 // Register routes
 itemRouter.route('/').get(function (req, res) {
-    res.render('items');
+    Item.find(function (err, itms) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            res.render('items', {itms: itms});
+        }
+    });
 });
 itemRouter.route('/single').get(function (req, res) {
     res.render('singleItem');
