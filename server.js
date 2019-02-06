@@ -1,14 +1,17 @@
 // Main server
-var express = require('express'),
+const express = require('express'),
 // Set up MongoDB database
 mongoose = require('mongoose'),
 bodyParser = require('body-parser'),
 // Require ItemRoutes file
 itemRouter = require('./src/routes/itemRoutes'),
 path = require('path'),
-nodeMailer = require('nodemailer');
+nodeMailer = require('nodemailer'),
+// HTTP request package
+request = require('request');
 
-var app = express();
+const app = express();
+
 var port = 3000;
 
 app.listen(port, function(){
@@ -25,11 +28,11 @@ app.use(bodyParser.json());
 // Create routes
 app.use('/items', itemRouter);
 
-
 // Set up a routing
 app.get('/', function(req, res){
     res.render('index');
 });
+// ====================
 // Route for email page
 app.get('/email', function (req, res) {
     res.render('email');
@@ -58,6 +61,33 @@ app.post('/send-email', function (req, res) {
         }
         console.log('Message %s sent: %s', info.messageId, info.response);
         res.render('email');
+    });
+});
+// ====================
+// Access recaptcha page
+app.get('/captcha', function (req, res) {
+    res.render('captcha');
+});
+// Handle response
+app.post('/captcha', function (req, res) {
+    if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+        return res.json({
+            "responseError": "Please select captcha first"
+        });
+    }
+    const secretKey = "6LdxdY8UAAAAAL6dntB-bAnq7yvnVSwIRfKsvxns";
+    const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + secretKey + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
+
+    request(verificationURL, function (error, response, body) {
+        body = JSON.parse(body);
+        if (body.success !== undefined && !body.success) {
+            return res.json({
+                "responseError": "Failed captcha verification"
+            });
+        }
+        res.json({
+            "responseSuccess": "Success"
+        });
     });
 });
 
