@@ -19,7 +19,7 @@ import captcha from './routes/captcha';
 
 // Connect with Mongo database
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://admin:admin@127.0.0.1:27017/aufinancex?authSource=admin', {
+mongoose.connect('mongodb://username:password@127.0.0.1:27017/db_name?authSource=admin', {
 	useMongoClient: true
 });
 
