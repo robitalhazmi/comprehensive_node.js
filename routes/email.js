@@ -14,12 +14,12 @@ router.post('/send-email', isLoggedIn, function (req, res) {
         port: 465,
         secure: true,
         auth: {
-            user: 'xxx@email.com',
+            user: 'sisteminformasiua15@gmail.com',
             pass: '15siadmin'
         }
     });
     let mailOptions = {
-        from: '"Xxx" <xxx@email.com>',
+        from: '"Simolas" <sisteminformasiua15@gmail.com>',
         to: req.body.to,
         subject: req.body.subject,
         text: req.body.body,

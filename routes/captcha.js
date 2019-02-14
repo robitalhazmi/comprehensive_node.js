@@ -15,7 +15,7 @@ router.post('/', isLoggedIn, function (req, res) {
             "responseError": "Please select captcha first"
         });
     }
-    const secretKey = "xxx";
+    const secretKey = "6LdxdY8UAAAAAL6dntB-bAnq7yvnVSwIRfKsvxns";
     const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + secretKey + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
 
     request(verificationURL, function (error, response, body) {
