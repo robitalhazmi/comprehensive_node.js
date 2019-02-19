@@ -16,6 +16,7 @@ import index from './routes/index';
 import users from './routes/users';
 import email from './routes/email';
 import captcha from './routes/captcha';
+import upload from './routes/upload';
 
 // Connect with Mongo database
 mongoose.Promise = global.Promise;
@@ -65,6 +66,7 @@ app.use('/users', users);
 app.use('/items', ItemRoutes);
 app.use('/email', email);
 app.use('/captcha', captcha);
+app.use('/upload', upload);
 
 app.listen(PORT, function(){
     console.log('Server is running on port:', PORT);
