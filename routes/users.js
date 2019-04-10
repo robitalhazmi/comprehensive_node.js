@@ -1,10 +1,10 @@
 import express from 'express';
 // Import User model
-import { User, createUser, getUserByEmail, comparePassword, getUserByID } from '../models/User';
-import passport from 'passport';
+import { User } from '../models/User';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 let router = express.Router();
-let LocalStrategy = require('passport-local').Strategy;
 
 router.get('/', function (req, res) {
     res.render('pages/users');
@@ -16,7 +16,6 @@ router.post('/register', notLoggedIn, function (req, res) {
     let name = req.body.name;
     let email = req.body.email;
     let password = req.body.password;
-    let cfm_pwd = req.body.cfm_pwd;
 
     req.checkBody('name', 'Name is required').notEmpty();
     req.checkBody('email', 'Email is required').notEmpty();
@@ -24,40 +23,76 @@ router.post('/register', notLoggedIn, function (req, res) {
     req.checkBody('password', 'Password is required').notEmpty();
     req.checkBody('cfm_pwd', 'Confirm Password is required').notEmpty();
     req.checkBody('cfm_pwd', 'Confirm Password must matches with Password').equals(password);
-    
+
     let errors = req.validationErrors();
     if (errors) {
         res.render('pages/register', {
             errors: errors
         });
-    }
-    else {
-        let user = new User({
-            name: name,
-            email: email,
-            password: password
-        });
-        createUser(user, function (err, user) {
+    } else {
+        bcrypt.hash(password, 10, function (err, hash) {
             if (err) {
-                throw err;
-            }
-            else {
-                console.log(user);
+                return res.status(500).json({
+                    error: err
+                });
+            } else {
+                const user = new User({
+                    name: name,
+                    email: email,
+                    password: hash
+                });
+                user.save().then(function (result) {
+                    console.log(result);
+                    res.status(200).json({
+                        success: 'New user has been created'
+                    });
+                }).catch(error => {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
             }
         });
-        req.flash('success_message', 'You have registered, Now please login');
-        res.redirect('login');
     }
 });
 router.get('/login', notLoggedIn, function (req, res) {
     res.render('pages/login');
 });
 // Passport authenticate middleware
-router.post('/login', notLoggedIn, passport.authenticate('local', {
-    failureRedirect: '/users/login', failureFlash: true
-}), function (req, res) {
-    req.flash('success_message', 'You are now logged in!!');
-    res.redirect('/');
+router.post('/login', notLoggedIn, function (req, res) {
+    User.findOne({email: req.body.email})
+   .exec()
+   .then(function(user) {
+      bcrypt.compare(req.body.password, user.password, function(err, result){
+         if(err) {
+            return res.status(401).json({
+               failed: 'Unauthorized Access'
+            });
+         }
+         if(result) {
+            const JWTToken = jwt.sign({
+                 email: user.email,
+                 _id: user._id
+               },
+               'secret',
+                {
+                  expiresIn: '2h'
+                });
+                return res.status(200).json({
+                  success: 'Welcome to the JWT Auth',
+                  token: JWTToken
+                });
+           }
+         return res.status(401).json({
+            failed: 'Unauthorized Access',
+         });
+      });
+   })
+   .catch(error => {
+      res.status(500).json({
+         error: error
+      });
+   });;
 });
 router.get('/logout', isLoggedIn, function (req, res) {
     req.logOut();
@@ -68,56 +103,17 @@ router.get('/logout', isLoggedIn, function (req, res) {
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
         next();
-    }
-    else {
+    } else {
         res.redirect('/users/login');
     }
 }
+
 function notLoggedIn(req, res, next) {
     if (!req.isAuthenticated()) {
         next();
-    }
-    else {
+    } else {
         res.redirect('/');
     }
 }
-
-// Local passport strategy
-passport.use(new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password',
-    passReqToCallback: true
-},
-function (req, email, password, done) {
-    getUserByEmail(email, function (err, user) {
-        if (err) {
-            return done(err);
-        }
-        if (!user) {
-            return done(null, false, req.flash('error_message', 'No email is found'));
-        }
-        comparePassword(password, user.password, function (err, isMatch) {
-            if (err) {
-                return done(err);
-            }
-            if (isMatch) {
-                return done(null, user, req.flash('success_message', 'You have successfully loged in!!'));
-            }
-            else {
-                return done(null, false, req.flash('error_message', 'Incorrect password'));
-            }
-        });
-    });
-}));
-
-passport.serializeUser(function (user, done) {
-    done(null, user._id);
-});
-
-passport.deserializeUser(function (id, done) {
-    getUserByID(id, function (err, user) {
-        done(err, user);
-    });
-});
 
 export default router;
